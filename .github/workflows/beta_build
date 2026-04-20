@@ -1,8 +1,7 @@
 name: Build Beta Package
 
 on:
-  schedule:
-    - cron: "22 22 * * *"
+  workflow_call:
   workflow_dispatch:
     inputs:
       updater:
