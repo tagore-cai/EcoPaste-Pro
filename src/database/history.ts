@@ -50,25 +50,24 @@ export const deleteHistory = async (
 
   if (!deleteLocalFile || type !== "image") return;
 
-  let path = value;
-
-  // Handle case where image value is an array or string
-  if (Array.isArray(value)) {
-    path = value[0];
-  }
-
   const saveImagePath = getSaveImagePath();
 
-  if (typeof path === "string" && !path.startsWith(saveImagePath)) {
-    const isAbs = /^[a-zA-Z]:[\\/]/.test(path) || path.startsWith("/");
-    if (!isAbs) {
-      path = join(saveImagePath, path);
+  const rawPaths: string[] = Array.isArray(value)
+    ? value.map(String).filter(Boolean)
+    : typeof value === "string" && value
+      ? [value]
+      : [];
+
+  for (const raw of rawPaths) {
+    const resolvedPath =
+      raw.startsWith(saveImagePath) ||
+      /^[a-zA-Z]:[\\/]/.test(raw) ||
+      raw.startsWith("/")
+        ? raw
+        : join(saveImagePath, raw);
+
+    if (await exists(resolvedPath)) {
+      await remove(resolvedPath);
     }
   }
-
-  const existed = await exists(path as string);
-
-  if (!existed) return;
-
-  return remove(path);
 };

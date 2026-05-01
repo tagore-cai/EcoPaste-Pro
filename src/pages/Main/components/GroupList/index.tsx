@@ -69,20 +69,52 @@ const GroupList = () => {
     },
   ];
 
-  useKeyPress("tab", (event) => {
-    const index = presetGroups.findIndex((item) => item.id === rootState.group);
-    const length = presetGroups.length;
+  useKeyPress(
+    "tab",
+    (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const index = presetGroups.findIndex(
+        (item) => item.id === rootState.group,
+      );
+      const length = presetGroups.length;
 
-    let nextIndex = index;
+      let nextIndex = index;
 
-    if (event.shiftKey) {
-      nextIndex = index === 0 ? length - 1 : index - 1;
-    } else {
-      nextIndex = index === length - 1 ? 0 : index + 1;
-    }
+      if (event.shiftKey) {
+        nextIndex = index === 0 ? length - 1 : index - 1;
+      } else {
+        nextIndex = index === length - 1 ? 0 : index + 1;
+      }
 
-    rootState.group = presetGroups[nextIndex].id;
-  });
+      rootState.group = presetGroups[nextIndex].id;
+    },
+    { useCapture: true },
+  );
+
+  useKeyPress(
+    (e) => e.code === "ArrowRight" || e.code === "ArrowLeft",
+    (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const index = presetGroups.findIndex(
+        (item) => item.id === rootState.group,
+      );
+      const length = presetGroups.length;
+
+      let nextIndex = index;
+
+      if (event.code === "ArrowLeft") {
+        nextIndex = index === 0 ? length - 1 : index - 1;
+      } else {
+        nextIndex = index === length - 1 ? 0 : index + 1;
+      }
+
+      rootState.group = presetGroups[nextIndex].id;
+    },
+    { useCapture: true },
+  );
 
   return (
     <Scrollbar data-tauri-drag-region>

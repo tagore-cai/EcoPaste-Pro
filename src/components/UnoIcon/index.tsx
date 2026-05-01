@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import type { FC, HTMLAttributes } from "react";
+import { forwardRef, type HTMLAttributes } from "react";
 
 export interface UnoIconProps extends HTMLAttributes<HTMLElement> {
   name?: string;
@@ -9,7 +9,7 @@ export interface UnoIconProps extends HTMLAttributes<HTMLElement> {
   hoverable?: boolean;
 }
 
-const UnoIcon: FC<UnoIconProps> = (props) => {
+const UnoIcon = forwardRef<HTMLElement, UnoIconProps>((props, ref) => {
   const { name, className, size, color, active, hoverable, style, ...rest } =
     props;
 
@@ -20,6 +20,7 @@ const UnoIcon: FC<UnoIconProps> = (props) => {
         "cursor-pointer transition hover:text-primary": hoverable,
         "text-primary": active,
       })}
+      ref={ref}
       style={{
         color,
         height: size,
@@ -28,6 +29,6 @@ const UnoIcon: FC<UnoIconProps> = (props) => {
       }}
     />
   );
-};
+});
 
 export default UnoIcon;

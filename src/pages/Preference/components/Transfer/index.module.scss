@@ -107,7 +107,7 @@
   overflow: hidden;
   border: 1px solid var(--ant-color-border-secondary);
   border-radius: 12px;
-  background: rgb(250 250 250 / 60%);
+  background: rgb(250 250 250 / 10%);
   transition: all 0.2s ease;
 
   &:hover {
@@ -459,7 +459,7 @@
 
 .channelCard {
   overflow: hidden;
-  background: rgb(250 250 250 / 60%);
+  background: rgb(250 250 250 / 10%);
   border: 1px solid var(--ant-color-border-secondary);
   border-radius: 12px;
   transition: all 0.2s ease;

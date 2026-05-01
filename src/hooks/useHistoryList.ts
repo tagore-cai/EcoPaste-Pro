@@ -149,7 +149,7 @@ export const useHistoryList = (options: Options) => {
         }
       }
 
-      state.noMore = list.length === 0;
+      state.noMore = list.length < state.size;
 
       if (page === 1) {
         rootState.list = list;

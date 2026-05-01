@@ -70,33 +70,33 @@ const Delete = () => {
 
       setTrue();
 
-      let range: Dayjs[] = [];
-
-      if (timeRange < 0) {
-        range = customRange;
-      } else {
-        range = [dayjs().subtract(timeRange, "hour"), dayjs()];
-      }
+      const range: Dayjs[] =
+        timeRange <= 0
+          ? customRange
+          : timeRange === 0
+            ? []
+            : [dayjs().subtract(timeRange, "hour"), dayjs()];
 
       const formatRange = range.map((item) => formatDate(item));
 
-      const list = await selectHistory();
+      const list = await selectHistory((qb) => {
+        let q = qb;
 
-      for await (const item of list) {
-        const { favorite, createTime } = item;
-
-        if (favorite && !deleteFavorite) continue;
-
-        const isBetween = dayjs(createTime).isBetween(
-          formatRange[0],
-          formatRange[1],
-          null,
-          "[]",
-        );
-
-        if (timeRange === 0 || isBetween) {
-          deleteHistory(item);
+        if (formatRange.length === 2) {
+          q = q
+            .where("createTime", ">=", formatRange[0])
+            .where("createTime", "<=", formatRange[1]) as typeof q;
         }
+
+        if (!deleteFavorite) {
+          q = q.where("favorite", "=", false) as typeof q;
+        }
+
+        return q;
+      });
+
+      for (const item of list) {
+        await deleteHistory(item);
       }
 
       toggle();

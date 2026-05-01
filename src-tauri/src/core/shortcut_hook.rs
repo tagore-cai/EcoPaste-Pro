@@ -32,6 +32,9 @@ pub fn start_double_modifier_listener(app_handle: AppHandle) {
 
         let mut last_key: Option<(Key, SystemTime)> = None;
 
+        #[cfg(target_os = "macos")]
+        rdev::set_is_main_thread(false);
+
         if let Err(_error) = rdev::listen(move |event| {
             if let EventType::KeyPress(key) = event.event_type {
                 let now = SystemTime::now();

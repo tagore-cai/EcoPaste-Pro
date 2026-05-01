@@ -161,12 +161,7 @@ impl TempImageManager {
 
     async fn remove_key(&self, key: &str) {
         let file_path = if let Ok(mut entries) = self.entries.lock() {
-            if let Some(entry) = entries.get_mut(key) {
-                entry.expires_at = Some(SystemTime::now() - Duration::from_secs(1));
-                Some(entry.file_path.clone())
-            } else {
-                None
-            }
+            entries.remove(key).map(|entry| entry.file_path)
         } else {
             None
         };

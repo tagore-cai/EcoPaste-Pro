@@ -4,7 +4,7 @@
  * Watches `clipboardStore.webdav.autoStrategy` and related schedule configs,
  * then schedules backups accordingly using setTimeout-based timers.
  */
-import { subscribe } from "valtio";
+import { subscribeKey } from "valtio/utils";
 import { clipboardStore } from "@/stores/clipboard";
 import type { ScheduleConfig } from "@/types/store";
 import { formatDate } from "@/utils/dayjs";
@@ -225,10 +225,11 @@ export function startAutoBackupScheduler() {
   // Apply current strategy immediately
   applyStrategy();
 
-  // Watch for strategy or schedule config changes
-  subscribe(clipboardStore.webdav, () => {
-    applyStrategy();
-  });
+  // Watch only schedule-related fields to avoid re-triggering when backup
+  // result fields (lastBackupAt, lastBackupStatus, etc.) are updated
+  subscribeKey(clipboardStore.webdav, "autoStrategy", applyStrategy);
+  subscribeKey(clipboardStore.webdav, "fullSchedule", applyStrategy);
+  subscribeKey(clipboardStore.webdav, "liteSchedule", applyStrategy);
 }
 
 export function stopAutoBackupScheduler() {

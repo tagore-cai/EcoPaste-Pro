@@ -162,7 +162,7 @@ const UpdateApp = () => {
         className={styles.modal}
         closable={false}
         confirmLoading={state.loading}
-        destroyOnClose
+        destroyOnHidden
         keyboard={false}
         maskClosable={false}
         okText={okText}

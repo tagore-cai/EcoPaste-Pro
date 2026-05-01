@@ -191,6 +191,8 @@ const OperationButton = () => {
       const oldIndex = content.operationButtons.findIndex(
         (key) => key === active.id,
       );
+
+      // newIndex
       const newIndex = content.operationButtons.findIndex(
         (key) => key === over.id,
       );
@@ -265,7 +267,7 @@ const OperationButton = () => {
 
       <Modal
         centered
-        destroyOnClose
+        destroyOnHidden
         footer={null}
         onCancel={toggle}
         open={open}
@@ -275,7 +277,9 @@ const OperationButton = () => {
         width={520}
       >
         <Transfer
-          dataSource={transferData.filter(d => d.key !== "push" || transferStore.push.masterEnabled)}
+          dataSource={transferData.filter(
+            (d) => d.key !== "push" || transferStore.push.masterEnabled,
+          )}
           onChange={(keys) => {
             clipboardStore.content.operationButtons = keys as any[];
           }}
