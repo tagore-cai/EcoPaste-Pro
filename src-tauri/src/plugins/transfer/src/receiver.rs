@@ -6,18 +6,19 @@
     routing::{get, post},
     Router,
 };
+
 use chrono::TimeZone;
 use encoding_rs::{Encoding, GB18030, UTF_16BE, UTF_16LE};
 use image::ImageFormat;
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
+    net::SocketAddr,
+    path::{Path, PathBuf},
+    sync::{Arc, Mutex},
+    time::Duration,
 };
 use tauri::{AppHandle, Emitter, Runtime};
 use tauri_plugin_clipboard_x::{write_files, write_html, write_image, write_rtf, write_text};
@@ -351,10 +352,12 @@ async fn handle_write(
         Err(response) => return response,
     };
 
+    // → 接收服务未启用（配置中 enabled = false），拒绝请求
     if let Some(response) = reject_if_receive_disabled(&receive_config) {
         return response;
     }
 
+    // → Token 验证失败：头中无 X-Receive-Token 或值不匹配，拒绝请求
     if let Some(response) = reject_if_auth_invalid(&headers, &receive_config.token) {
         return response;
     }
