@@ -29,6 +29,13 @@ const SelectionToolbar = ({ containerRef }: SelectionToolbarProps) => {
   const [position, setPosition] = useState<Position>({ left: 0, top: 0 });
   const toolbarRef = useRef<HTMLDivElement>(null);
   const isClickingToolbar = useRef(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // 检查选区是否在当前容器内
   const isSelectionInContainer = () => {
@@ -89,6 +96,8 @@ const SelectionToolbar = ({ containerRef }: SelectionToolbarProps) => {
       }
 
       requestAnimationFrame(() => {
+        if (!mountedRef.current) return;
+
         if (!isSelectionInContainer()) {
           setVisible(false);
           return;

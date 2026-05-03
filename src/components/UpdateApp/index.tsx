@@ -3,7 +3,7 @@ import { check, type Update } from "@tauri-apps/plugin-updater";
 import { useCreation, useReactive } from "ahooks";
 import { Flex, Modal, message, Typography } from "antd";
 import clsx from "clsx";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -31,6 +31,10 @@ const UpdateApp = () => {
   const timerRef = useRef<Interval>();
   const state = useReactive<State>({ download: 0 });
   const [messageApi, contextHolder] = message.useMessage();
+
+  useEffect(() => {
+    return () => clearInterval(timerRef.current);
+  }, []);
 
   // 监听自动更新配置变化
   useImmediateKey(globalStore.update, "auto", (value) => {

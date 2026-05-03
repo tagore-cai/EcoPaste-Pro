@@ -1,10 +1,10 @@
+import { listen } from "@tauri-apps/api/event";
 import {
   isRegistered,
   register,
   type ShortcutHandler,
   unregister,
 } from "@tauri-apps/plugin-global-shortcut";
-import { listen } from "@tauri-apps/api/event";
 import { useAsyncEffect, useUnmount } from "ahooks";
 import { castArray } from "es-toolkit/compat";
 import { useEffect, useState } from "react";
@@ -29,21 +29,24 @@ export const useRegister = (
     if (doubleShortcuts.length === 0) return;
 
     let unlisten: (() => void) | undefined;
+    let mounted = true;
 
     const setup = async () => {
-      unlisten = await listen<string>(
+      const fn = await listen<string>(
         "double_modifier_trigger",
         ({ payload }) => {
           if (doubleShortcuts.includes(payload)) {
-            handler({ shortcut: payload, state: "Pressed", id: 0 });
+            handler({ id: 0, shortcut: payload, state: "Pressed" });
           }
         },
       );
+      if (mounted) unlisten = fn;
     };
 
     setup();
 
     return () => {
+      mounted = false;
       unlisten?.();
     };
   }, deps);
@@ -62,7 +65,12 @@ export const useRegister = (
       }
     }
 
-    if (!shortcuts || (typeof shortcuts === 'string' ? shortcuts.startsWith("Double_") : shortcuts[0]?.startsWith("Double_"))) {
+    if (
+      !shortcuts ||
+      (typeof shortcuts === "string"
+        ? shortcuts.startsWith("Double_")
+        : shortcuts[0]?.startsWith("Double_"))
+    ) {
       setOldShortcuts(shortcuts);
       return;
     }
@@ -79,7 +87,13 @@ export const useRegister = (
   useUnmount(() => {
     const [shortcuts] = deps;
 
-    if (!shortcuts || (typeof shortcuts === 'string' ? shortcuts.startsWith("Double_") : shortcuts[0]?.startsWith("Double_"))) return;
+    if (
+      !shortcuts ||
+      (typeof shortcuts === "string"
+        ? shortcuts.startsWith("Double_")
+        : shortcuts[0]?.startsWith("Double_"))
+    )
+      return;
 
     unregister(shortcuts);
   });

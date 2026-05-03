@@ -145,7 +145,11 @@ export const useHistoryList = (options: Options) => {
         }
 
         if (type === "files") {
-          item.value = JSON.parse(value);
+          try {
+            item.value = JSON.parse(value);
+          } catch {
+            item.value = [];
+          }
         }
       }
 

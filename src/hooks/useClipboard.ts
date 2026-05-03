@@ -1,8 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useMount } from "ahooks";
+import { useMount, useUnmount } from "ahooks";
 import { cloneDeep } from "es-toolkit";
 import { isEmpty, remove } from "es-toolkit/compat";
 import { nanoid } from "nanoid";
+import { useRef } from "react";
 import {
   type ClipboardChangeOptions,
   onClipboardChange,
@@ -26,13 +27,15 @@ export const useClipboard = (
   state: State,
   options?: ClipboardChangeOptions,
 ) => {
+  const unlistenRef = useRef<() => void>(() => {});
+
   useMount(async () => {
     await startListening();
 
     let isProcessing = false;
     let lastClipboardSequenceNumber = 0;
 
-    onClipboardChange(async (result) => {
+    unlistenRef.current = await onClipboardChange(async (result) => {
       if (isProcessing) return;
       isProcessing = true;
 
@@ -225,7 +228,9 @@ export const useClipboard = (
                   await mkdir(customSavePath, { recursive: true });
                 }
                 await copyFile(originalFilePath, customFilePath);
-                await remove(originalFilePath);
+                try {
+                  await remove(originalFilePath);
+                } catch {}
                 data.value = customFilePath;
               }
             }
@@ -349,15 +354,12 @@ export const useClipboard = (
                 return false;
               }
               // custom: 根据标签筛选
-              const effectiveTag =
-                sqlData.subtype || sqlData.type || "text";
+              const effectiveTag = sqlData.subtype || sqlData.type || "text";
               return autoPushTags.includes(effectiveTag);
             })();
 
             if (shouldPush) {
-              const creds = await invoke(
-                "plugin:transfer|get_transfer_config",
-              );
+              const creds = await invoke("plugin:transfer|get_transfer_config");
               if (creds) {
                 const providers = [
                   transferStore.push.barkEnabled ? "bark" : null,
@@ -369,29 +371,30 @@ export const useClipboard = (
                 }
 
                 invoke("plugin:transfer|push_clipboard_item", {
+                  config: creds,
                   item: buildTransferPushItem(sqlData, {
+                    displayName:
+                      sqlData.type === "image" &&
+                      typeof sqlData.value === "string"
+                        ? sqlData.value
+                        : null,
                     localPath:
                       sqlData.type === "image" && typeof data.value === "string"
                         ? data.value
                         : null,
-                    displayName:
-                      sqlData.type === "image" && typeof sqlData.value === "string"
-                        ? sqlData.value
-                        : null,
                   }),
-                  config: creds,
                   nonSensitive: {
-                    providers,
-                    service_port: transferStore.receive.port,
-                    bark_level: transferStore.push.barkLevel,
-                    bark_auto_copy: transferStore.push.barkAutoCopy,
                     bark_archive: transferStore.push.barkArchive,
+                    bark_auto_copy: transferStore.push.barkAutoCopy,
+                    bark_group_mapping: transferStore.push.barkGroupMapping,
                     bark_group_mode: transferStore.push.barkGroupMode,
-                    bark_group_mapping:
-                      transferStore.push.barkGroupMapping,
+                    bark_level: transferStore.push.barkLevel,
+                    image_local_directory:
+                      transferStore.push.imageLocalDirectory,
                     image_strategy: transferStore.push.imageStrategy,
                     image_ttl_seconds: transferStore.push.imageTtlSeconds,
-                    image_local_directory: transferStore.push.imageLocalDirectory,
+                    providers,
+                    service_port: transferStore.receive.port,
                     webhook_payload_template:
                       transferStore.push.webhookPayloadTemplate,
                   },
@@ -406,5 +409,9 @@ export const useClipboard = (
         isProcessing = false;
       }
     }, options);
+  });
+
+  useUnmount(() => {
+    unlistenRef.current();
   });
 };

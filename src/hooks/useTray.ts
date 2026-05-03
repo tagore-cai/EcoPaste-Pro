@@ -53,7 +53,8 @@ export const useTray = () => {
 
     if (tray) return;
 
-    const { appName, appVersion } = globalStore.env;
+    const appName = globalStore.env?.appName ?? "EcoPaste";
+    const appVersion = globalStore.env?.appVersion ?? "";
 
     const menu = await getTrayMenu();
 
@@ -81,7 +82,7 @@ export const useTray = () => {
 
   // 获取托盘菜单
   const getTrayMenu = async () => {
-    const { appVersion } = globalStore.env;
+    const appVersion = globalStore.env?.appVersion ?? "";
 
     const items = await Promise.all([
       MenuItem.new({

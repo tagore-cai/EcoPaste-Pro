@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { type FC, useEffect, useId, useState } from "react";
 import { HexColorPicker, RgbColorPicker } from "react-colorful";
 import {
@@ -181,39 +182,21 @@ const ColorPicker: FC<ColorPickerProps> = ({
     <div className="flex flex-col gap-4">
       {/* 格式选择器 */}
       <div className="flex gap-2">
-        <button
-          className={`rounded px-3 py-1 text-sm ${
-            colorFormat === "hex"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-          }`}
-          onClick={() => handleFormatChange("hex")}
-          type="button"
-        >
-          HEX
-        </button>
-        <button
-          className={`rounded px-3 py-1 text-sm ${
-            colorFormat === "rgb"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-          }`}
-          onClick={() => handleFormatChange("rgb")}
-          type="button"
-        >
-          RGB
-        </button>
-        <button
-          className={`rounded px-3 py-1 text-sm ${
-            colorFormat === "cmyk"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-          }`}
-          onClick={() => handleFormatChange("cmyk")}
-          type="button"
-        >
-          CMYK
-        </button>
+        {(["hex", "rgb", "cmyk"] as const).map((fmt) => (
+          <button
+            className={clsx(
+              "rounded px-3 py-1 text-sm",
+              colorFormat === fmt
+                ? "bg-primary text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600",
+            )}
+            key={fmt}
+            onClick={() => handleFormatChange(fmt)}
+            type="button"
+          >
+            {fmt.toUpperCase()}
+          </button>
+        ))}
       </div>
 
       {/* 颜色选择器 */}
@@ -368,11 +351,19 @@ const ColorPicker: FC<ColorPickerProps> = ({
       {/* 颜色预览和输入框 */}
       <div className="flex items-center gap-2">
         <div
-          className="h-10 w-10 rounded border border-gray-300 dark:border-gray-600"
+          className={clsx(
+            "h-10 w-10 rounded border",
+            "border-gray-300 dark:border-gray-600",
+          )}
           style={{ backgroundColor: hexColor }}
         />
         <input
-          className="flex-1 rounded border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+          className={clsx(
+            "flex-1 rounded border px-3 py-2",
+            "border-gray-300 text-gray-900",
+            "focus:outline-none focus:ring-2 focus:ring-primary",
+            "dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100",
+          )}
           onChange={handleInputChange}
           placeholder="输入颜色值 (HEX/RGB向量/CMYK向量)"
           type="text"

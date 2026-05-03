@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import ProList from "@/components/ProList";
 import { deleteHistory, selectHistory } from "@/database/history";
@@ -40,6 +40,10 @@ const History = () => {
       }
     }, delay);
   });
+
+  useEffect(() => {
+    return () => clearInterval(timerRef.current);
+  }, []);
 
   return (
     <ProList footer={<Delete />} header={t("preference.history.history.title")}>

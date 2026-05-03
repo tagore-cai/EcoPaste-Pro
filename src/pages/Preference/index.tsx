@@ -1,5 +1,5 @@
 import { emit } from "@tauri-apps/api/event";
-import { useCreation, useMount } from "ahooks";
+import { useCreation, useDebounceFn, useMount, useUnmount } from "ahooks";
 import { Flex } from "antd";
 import clsx from "clsx";
 import { MacScrollbar } from "mac-scrollbar";
@@ -32,6 +32,9 @@ const Preference = () => {
   const { t } = useTranslation();
   const { app, shortcut, appearance } = useSnapshot(globalStore);
   const [activeKey, setActiveKey] = useState("clipboard");
+  const [activatedTabs, setActivatedTabs] = useState<Set<string>>(
+    new Set(["clipboard"]),
+  );
   const contentRef = useRef<HTMLElement>(null);
 
   const { createTray } = useTray();
@@ -59,11 +62,20 @@ const Preference = () => {
   useRegister(toggleWindowVisible, [shortcut.preference]);
 
   // 配置项变化通知其它窗口和本地存储
-  const handleStoreChanged = () => {
-    emit(LISTEN_KEY.STORE_CHANGED, { clipboardStore, globalStore, transferStore });
+  const { run: handleStoreChanged, cancel } = useDebounceFn(
+    () => {
+      emit(LISTEN_KEY.STORE_CHANGED, {
+        clipboardStore,
+        globalStore,
+        transferStore,
+      });
 
-    saveStore();
-  };
+      saveStore();
+    },
+    { wait: 300 },
+  );
+
+  useUnmount(cancel);
 
   const menuItems = useCreation(() => {
     return [
@@ -113,6 +125,11 @@ const Preference = () => {
   }, [appearance.language, activeKey]);
 
   const handleMenuClick = (key: string) => {
+    setActivatedTabs((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
     setActiveKey(key);
 
     raf(() => {
@@ -160,6 +177,8 @@ const Preference = () => {
       >
         {menuItems.map((item) => {
           const { key, content } = item;
+
+          if (!activatedTabs.has(key)) return null;
 
           return (
             <div hidden={key !== activeKey} key={key}>
