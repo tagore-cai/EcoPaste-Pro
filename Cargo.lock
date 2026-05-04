@@ -5055,6 +5055,7 @@ dependencies = [
  "objc2-core-graphics",
  "objc2-foundation 0.3.2",
  "winapi",
+ "x11",
 ]
 
 [[package]]
