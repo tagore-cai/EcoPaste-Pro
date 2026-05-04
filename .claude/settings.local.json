@@ -5,7 +5,10 @@
       "Bash(cargo test *)",
       "Bash(npm ls *)",
       "Bash(pnpm why *)",
-      "Bash(pnpm install *)"
+      "Bash(pnpm install *)",
+      "Bash(npx tsc *)",
+      "Bash(git mv *)",
+      "Bash(xargs sed *)"
     ]
   }
 }

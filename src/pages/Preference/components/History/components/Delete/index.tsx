@@ -16,8 +16,8 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import AdaptiveSelect from "@/components/AdaptiveSelect";
 import { LISTEN_KEY } from "@/constants";
-import { deleteHistory, selectHistory } from "@/database/history";
-import { dayjs, formatDate } from "@/utils/dayjs";
+import { deleteHistory, listHistory } from "@/database/history";
+import { dayjs } from "@/utils/dayjs";
 
 const { RangePicker } = DatePicker;
 
@@ -77,22 +77,14 @@ const Delete = () => {
             ? []
             : [dayjs().subtract(timeRange, "hour"), dayjs()];
 
-      const formatRange = range.map((item) => formatDate(item));
+      const dateRange =
+        range.length === 2
+          ? ([range[0].valueOf(), range[1].valueOf()] as [number, number])
+          : undefined;
 
-      const list = await selectHistory((qb) => {
-        let q = qb;
-
-        if (formatRange.length === 2) {
-          q = q
-            .where("createTime", ">=", formatRange[0])
-            .where("createTime", "<=", formatRange[1]) as typeof q;
-        }
-
-        if (!deleteFavorite) {
-          q = q.where("favorite", "=", false) as typeof q;
-        }
-
-        return q;
+      const list = await listHistory({
+        dateRange,
+        ...(deleteFavorite ? {} : { favorite: false }),
       });
 
       for (const item of list) {

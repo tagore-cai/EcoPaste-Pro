@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import ProList from "@/components/ProList";
-import { deleteHistory, selectHistory } from "@/database/history";
+import { deleteHistory, listHistory } from "@/database/history";
 import { useImmediate } from "@/hooks/useImmediate";
 import { clipboardStore } from "@/stores/clipboard";
 import type { Interval } from "@/types/shared";
@@ -25,9 +25,7 @@ const AutoClean = () => {
     const delay = 1000 * 60 * 30;
 
     timerRef.current = setInterval(async () => {
-      const list = await selectHistory((qb) => {
-        return qb.where("favorite", "=", false);
-      });
+      const list = await listHistory({ favorite: false });
 
       for (const [index, item] of list.entries()) {
         const { createTime } = item;

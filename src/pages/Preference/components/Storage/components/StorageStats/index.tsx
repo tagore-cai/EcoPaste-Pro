@@ -37,12 +37,9 @@ const TYPE_WEIGHTS: Record<string, number> = {
 import { useTranslation } from "react-i18next";
 import ProList from "@/components/ProList";
 import { LISTEN_KEY } from "@/constants";
-import {
-  CONTENT_TYPE_TAGS,
-  getTypeDbCondition,
-} from "@/constants/contentTypes";
+import { CONTENT_TYPE_TAGS } from "@/constants/contentTypes";
 import { getDatabase } from "@/database";
-import { deleteHistory, selectHistory } from "@/database/history";
+import { cleanHistoryByType } from "@/database/history";
 import { dayjs } from "@/utils/dayjs";
 
 const { RangePicker } = DatePicker;
@@ -343,27 +340,12 @@ const StorageStats = ({ refreshKey }: StorageStatsProps) => {
       const dateRange = getDateRangeStrings(timeRange, customRange);
 
       for (const key of selectedKeys) {
-        const tagKey = String(key);
-        const items = await selectHistory((qb) => {
-          let q = qb.where("favorite", "=", scope === "favorites");
-          q = q.where((eb: any) => {
-            const cond = getTypeDbCondition(tagKey, eb);
-            return cond || eb("id", "is not", null);
-          });
-          if (dateRange) {
-            q = q.where((eb) =>
-              eb.and([
-                eb("createTime", ">=", dateRange[0]),
-                eb("createTime", "<=", dateRange[1]),
-              ]),
-            );
-          }
-          return q;
+        await cleanHistoryByType({
+          dateRange,
+          deleteLocalFile,
+          scope,
+          tagKey: String(key),
         });
-
-        for (const item of items) {
-          await deleteHistory(item, deleteLocalFile);
-        }
       }
 
       message.success(
@@ -678,7 +660,11 @@ const StorageStats = ({ refreshKey }: StorageStatsProps) => {
                           opacity: item.size > 0 ? 0.9 : 0.15,
                         }}
                       />
-                      <Flex align="center" className="mt-2 min-w-0 w-full" vertical>
+                      <Flex
+                        align="center"
+                        className="mt-2 w-full min-w-0"
+                        vertical
+                      >
                         <span
                           className="mb-1 font-bold text-xs leading-none"
                           style={{ color: item.color }}

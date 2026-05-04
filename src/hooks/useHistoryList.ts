@@ -4,10 +4,8 @@ import { isString } from "es-toolkit";
 import { unionBy } from "es-toolkit/compat";
 import { useContext, useRef } from "react";
 import { LISTEN_KEY } from "@/constants";
-import { selectHistory } from "@/database/history";
+import { listHistory } from "@/database/history";
 import { MainContext } from "@/pages/Main";
-import { dayjs } from "@/utils/dayjs";
-import { isBlank } from "@/utils/is";
 import { getSaveImagePath, join } from "@/utils/path";
 import { useTauriListen } from "./useTauriListen";
 
@@ -36,95 +34,16 @@ export const useHistoryList = (options: Options) => {
 
       const { page } = state;
 
-      const list = await selectHistory((qb) => {
-        const { size } = state;
-        const { group, search, dateRange, filterTags } = rootState;
-        const isFavoriteGroup = group === "favorite";
-        const isLinksGroup = group === "links";
-        const isColorsGroup = group === "colors";
-        const isEmailGroup = group === "email";
-        const isCodeGroup = group === "code";
-        const isNormalGroup =
-          group !== "all" &&
-          !isFavoriteGroup &&
-          !isLinksGroup &&
-          !isColorsGroup &&
-          !isEmailGroup &&
-          !isCodeGroup;
+      const { size } = state;
+      const { group, search, dateRange, filterTags } = rootState;
 
-        return qb
-          .$if(!!dateRange, (eb) => {
-            return eb.where((eb) =>
-              eb.or([
-                eb.and([
-                  eb(
-                    "createTime",
-                    ">=",
-                    dayjs(dateRange![0]).format("YYYY-MM-DD HH:mm:ss"),
-                  ),
-                  eb(
-                    "createTime",
-                    "<=",
-                    dayjs(dateRange![1]).format("YYYY-MM-DD HH:mm:ss"),
-                  ),
-                ]),
-                eb.and([
-                  eb("createTime", ">=", String(dateRange![0])),
-                  eb("createTime", "<=", String(dateRange![1])),
-                ]),
-              ]),
-            );
-          })
-          .$if(!!filterTags && filterTags.length < 12, (eb) => {
-            return eb.where((eb) => {
-              const conditions: any[] = [];
-              if (filterTags!.includes("text"))
-                conditions.push(
-                  eb.and([eb("type", "=", "text"), eb("subtype", "is", null)]),
-                );
-              if (filterTags!.includes("rtf"))
-                conditions.push(eb("type", "=", "rtf"));
-              if (filterTags!.includes("html"))
-                conditions.push(eb("type", "=", "html"));
-              if (filterTags!.includes("image"))
-                conditions.push(eb("type", "=", "image"));
-              if (filterTags!.includes("url"))
-                conditions.push(eb("subtype", "=", "url"));
-              if (filterTags!.includes("code"))
-                conditions.push(eb("subtype", "like", "code_%"));
-              if (filterTags!.includes("markdown"))
-                conditions.push(eb("subtype", "=", "markdown"));
-              if (filterTags!.includes("path"))
-                conditions.push(eb("subtype", "=", "path"));
-              if (filterTags!.includes("email"))
-                conditions.push(eb("subtype", "=", "email"));
-              if (filterTags!.includes("color"))
-                conditions.push(eb("subtype", "=", "color"));
-              if (filterTags!.includes("command"))
-                conditions.push(eb("subtype", "=", "command"));
-              if (filterTags!.includes("files"))
-                conditions.push(eb("type", "=", "files"));
-
-              return eb.or(conditions);
-            });
-          })
-          .$if(isFavoriteGroup, (eb) => eb.where("favorite", "=", true))
-          .$if(isLinksGroup, (eb) => eb.where("subtype", "in", ["url", "path"]))
-          .$if(isColorsGroup, (eb) => eb.where("subtype", "=", "color"))
-          .$if(isEmailGroup, (eb) => eb.where("subtype", "=", "email"))
-          .$if(isCodeGroup, (eb) => eb.where("subtype", "like", "code_%"))
-          .$if(isNormalGroup, (eb) => eb.where("group", "=", group))
-          .$if(!isBlank(search), (eb) => {
-            return eb.where((eb) => {
-              return eb.or([
-                eb("search", "like", eb.val(`%${search}%`)),
-                eb("note", "like", eb.val(`%${search}%`)),
-              ]);
-            });
-          })
-          .offset((page - 1) * size)
-          .limit(size)
-          .orderBy("createTime", "desc");
+      const list = await listHistory({
+        dateRange,
+        filterTags,
+        group,
+        limit: size,
+        offset: (page - 1) * size,
+        search,
       });
 
       if (currentFetchId !== fetchIdRef.current) return;

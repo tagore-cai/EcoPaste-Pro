@@ -11,8 +11,8 @@ import {
 } from "tauri-plugin-clipboard-x-api";
 import { fullName } from "tauri-plugin-fs-pro-api";
 import {
+  findHistoryByTypeAndValue,
   insertHistory,
-  selectHistory,
   updateHistory,
 } from "@/database/history";
 import type { State } from "@/pages/Main";
@@ -243,11 +243,10 @@ export const useClipboard = (
           sqlData.value = JSON.stringify(value);
         }
 
-        const [matched] = await selectHistory((qb) => {
-          const { type, value } = sqlData;
-
-          return qb.where("type", "=", type).where("value", "=", value);
-        });
+        const matched = await findHistoryByTypeAndValue(
+          sqlData.type,
+          sqlData.value as string,
+        );
 
         let visible = state.group === "all" || state.group === group;
 

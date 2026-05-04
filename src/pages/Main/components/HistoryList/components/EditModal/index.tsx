@@ -266,7 +266,7 @@ const EditModal = forwardRef<EditModalRef>((_, ref) => {
   return (
     <Modal
       centered
-      destroyOnHidden
+      forceRender
       onCancel={setFalse}
       onOk={handleOk}
       open={open}
