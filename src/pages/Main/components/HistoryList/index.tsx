@@ -93,6 +93,9 @@ const HistoryList = () => {
               </div>
             );
           }}
+          rangeChanged={({ startIndex }) => {
+            rootState.firstVisibleIndex = startIndex;
+          }}
           ref={virtuosoRef}
         />
       </Scrollbar>

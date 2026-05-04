@@ -357,6 +357,70 @@ export const deleteHistory = async (
   }
 };
 
+export const countUnmatchedRecords = async () => {
+  const db = await getDatabase();
+
+  const row = await db
+    .selectFrom("history")
+    .select(db.fn.countAll<number>().as("count"))
+    .where((eb) =>
+      eb.not(
+        eb.or([
+          // subtype IS NOT NULL 守卫：避免 SQL NULL 传播导致 NOT (NULL) = NULL 行被排除
+          eb.and([
+            eb("subtype", "is not", null),
+            eb.or([
+              eb("subtype", "in", [
+                "url",
+                "markdown",
+                "path",
+                "email",
+                "color",
+                "command",
+              ]),
+              eb("subtype", "like", "code_%"),
+            ]),
+          ]),
+          eb("type", "in", ["rtf", "html", "image", "files"]),
+          eb.and([eb("subtype", "is", null), eb("type", "=", "text")]),
+        ]),
+      ),
+    )
+    .executeTakeFirst();
+
+  return Number(row?.count ?? 0);
+};
+
+export const cleanUnmatchedRecords = async () => {
+  const db = await getDatabase();
+
+  return db
+    .deleteFrom("history")
+    .where((eb) =>
+      eb.not(
+        eb.or([
+          eb.and([
+            eb("subtype", "is not", null),
+            eb.or([
+              eb("subtype", "in", [
+                "url",
+                "markdown",
+                "path",
+                "email",
+                "color",
+                "command",
+              ]),
+              eb("subtype", "like", "code_%"),
+            ]),
+          ]),
+          eb("type", "in", ["rtf", "html", "image", "files"]),
+          eb.and([eb("subtype", "is", null), eb("type", "=", "text")]),
+        ]),
+      ),
+    )
+    .execute();
+};
+
 export const cleanHistoryByType = async (params: {
   tagKey: string;
   scope: "all" | "favorites";
@@ -371,7 +435,7 @@ export const cleanHistoryByType = async (params: {
       .select(historyColumns as (keyof DatabaseSchemaHistory)[])
       .where("favorite", "=", params.scope === "favorites")
       .where((eb) => {
-        const cond = getTypeDbCondition(params.tagKey, eb as any);
+        const cond = getTypeDbCondition(params.tagKey, eb);
         return cond || eb("id", "is not", null);
       })
       .$if(!!params.dateRange, (qb) =>
@@ -414,7 +478,7 @@ export const cleanHistoryByType = async (params: {
     .deleteFrom("history")
     .where("favorite", "=", params.scope === "favorites");
 
-  qb = qb.where((eb: any) => {
+  qb = qb.where((eb) => {
     const cond = getTypeDbCondition(params.tagKey, eb);
     return cond || eb("id", "is not", null);
   }) as any;

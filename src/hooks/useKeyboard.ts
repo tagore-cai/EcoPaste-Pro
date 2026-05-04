@@ -4,6 +4,8 @@ import { useContext } from "react";
 import { LISTEN_KEY, PRESET_SHORTCUT } from "@/constants";
 import { MainContext } from "@/pages/Main";
 
+const NUM_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+
 const keys = [
   "space",
   "enter",
@@ -13,6 +15,7 @@ const keys = [
   "downarrow",
   "home",
   PRESET_SHORTCUT.FAVORITE,
+  ...NUM_KEYS,
 ];
 
 interface UseKeyboardProps {
@@ -32,6 +35,17 @@ export const useKeyboard = (props: UseKeyboardProps) => {
     }
 
     const { activeId, eventBus } = rootState;
+    const numIndex = NUM_KEYS.indexOf(key as string);
+    if (numIndex !== -1) {
+      const item = rootState.list[rootState.firstVisibleIndex + numIndex];
+      if (item) {
+        return eventBus?.emit({
+          action: LISTEN_KEY.CLIPBOARD_ITEM_PASTE,
+          id: item.id,
+        });
+      }
+      return;
+    }
 
     if (!activeId) return;
 

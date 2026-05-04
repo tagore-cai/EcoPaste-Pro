@@ -219,6 +219,7 @@ const Item: FC<ItemProps> = (props) => {
         data={data}
         handleEdit={handleEdit}
         handleNote={handleNote}
+        index={Math.max(0, index - rootState.firstVisibleIndex)}
       />
 
       <div

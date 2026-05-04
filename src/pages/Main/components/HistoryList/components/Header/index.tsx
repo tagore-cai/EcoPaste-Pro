@@ -27,10 +27,11 @@ interface HeaderProps {
   handleFavorite: () => void;
   handleDelete: () => void;
   handleEdit: () => void;
+  index: number;
 }
 
 const Header: FC<HeaderProps> = (props) => {
-  const { data } = props;
+  const { data, index } = props;
   const { id, type, value, count, createTime, favorite, subtype } = data;
   const { rootState } = useContext(MainContext);
   const { t, i18n } = useTranslation();
@@ -60,7 +61,7 @@ const Header: FC<HeaderProps> = (props) => {
       return "Markdown";
     }
 
-    if (subtype?.startsWith("code_")) {
+    if (subtype?.startsWith("code")) {
       const lang = subtype.replace("code_", "");
       let displayLang = lang.charAt(0).toUpperCase() + lang.slice(1);
       if (lang === "cpp") displayLang = "C++";
@@ -176,19 +177,19 @@ const Header: FC<HeaderProps> = (props) => {
             }
 
             await invoke("plugin:transfer|push_clipboard_item", {
-              item: buildTransferPushItem(data),
               config,
+              item: buildTransferPushItem(data),
               nonSensitive: {
-                providers,
-                service_port: ts.receive.port,
-                bark_level: ts.push.barkLevel,
-                bark_auto_copy: ts.push.barkAutoCopy,
                 bark_archive: ts.push.barkArchive,
-                bark_group_mode: ts.push.barkGroupMode,
+                bark_auto_copy: ts.push.barkAutoCopy,
                 bark_group_mapping: ts.push.barkGroupMapping,
+                bark_group_mode: ts.push.barkGroupMode,
+                bark_level: ts.push.barkLevel,
+                image_local_directory: ts.push.imageLocalDirectory,
                 image_strategy: ts.push.imageStrategy,
                 image_ttl_seconds: ts.push.imageTtlSeconds,
-                image_local_directory: ts.push.imageLocalDirectory,
+                providers,
+                service_port: ts.receive.port,
                 webhook_payload_template: ts.push.webhookPayloadTemplate,
               },
             });
@@ -232,9 +233,18 @@ const Header: FC<HeaderProps> = (props) => {
   return (
     <div className="relative flex h-[22px] items-center text-color-2">
       <div
-        className="flex flex-1 items-center gap-2 overflow-hidden whitespace-nowrap text-[11px]"
+        className="flex flex-1 items-center gap-1 overflow-hidden whitespace-nowrap text-[11px]"
         title={fullTextInfo}
       >
+        <span
+          className="mr-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded font-bold text-[10px]"
+          style={{
+            backgroundColor: "var(--ant-blue-1)",
+            color: "var(--ant-blue)",
+          }}
+        >
+          {index + 1}
+        </span>
         {hasRenderableSourceIcon && data.sourceAppIcon && (
           <img
             alt={data.sourceAppName}
@@ -243,8 +253,9 @@ const Header: FC<HeaderProps> = (props) => {
             title={data.sourceAppName}
           />
         )}
-        {!hasRenderableSourceIcon && data.sourceAppName && (
-          shouldUseRemoteDeviceIcon ? (
+        {!hasRenderableSourceIcon &&
+          data.sourceAppName &&
+          (shouldUseRemoteDeviceIcon ? (
             <img
               alt={data.sourceAppName}
               className="h-3.5 w-3.5 flex-shrink-0 rounded-sm object-contain opacity-85"
@@ -253,13 +264,12 @@ const Header: FC<HeaderProps> = (props) => {
             />
           ) : (
             <span
-              className="flex-shrink-0 text-12 opacity-70"
+              className="flex-shrink-0 text-[8px] opacity-70"
               title={data.sourceAppName}
             >
               [{data.sourceAppName}]
             </span>
-          )
-        )}
+          ))}
         <span className="flex-shrink-0">{renderType()}</span>
         <span className="flex-shrink-0">{renderCount()}</span>
         {renderPixel() && (
@@ -305,7 +315,8 @@ const Header: FC<HeaderProps> = (props) => {
           if (
             key === "push" &&
             (!transferStore.push.masterEnabled ||
-              (!transferStore.push.barkEnabled && !transferStore.push.webhookEnabled))
+              (!transferStore.push.barkEnabled &&
+                !transferStore.push.webhookEnabled))
           )
             return null;
 

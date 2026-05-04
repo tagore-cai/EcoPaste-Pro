@@ -39,7 +39,11 @@ import ProList from "@/components/ProList";
 import { LISTEN_KEY } from "@/constants";
 import { CONTENT_TYPE_TAGS } from "@/constants/contentTypes";
 import { getDatabase } from "@/database";
-import { cleanHistoryByType } from "@/database/history";
+import {
+  cleanHistoryByType,
+  cleanUnmatchedRecords,
+  countUnmatchedRecords,
+} from "@/database/history";
 import { dayjs } from "@/utils/dayjs";
 
 const { RangePicker } = DatePicker;
@@ -122,6 +126,8 @@ const StorageStats = ({ refreshKey }: StorageStatsProps) => {
   const [sortField, setSortField] = useState<SortField>("type");
   const [sortOrder, setSortOrder] = useState<SortOrder>("ascend");
 
+  const [unmatchedCount, setUnmatchedCount] = useState(0);
+  const [unmatchedCleaning, setUnmatchedCleaning] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
   const [timeRange, setTimeRange] = useState<TimeRangeKey>("all");
   const [scope, setScope] = useState<"all" | "favorites">("all");
@@ -259,6 +265,25 @@ const StorageStats = ({ refreshKey }: StorageStatsProps) => {
       fetchStats("all", [null, null], "all");
     }
   }, []);
+
+  useEffect(() => {
+    countUnmatchedRecords().then(setUnmatchedCount);
+  }, [refreshKey]);
+
+  const handleCleanUnmatched = async () => {
+    setUnmatchedCleaning(true);
+    try {
+      await cleanUnmatchedRecords();
+      setUnmatchedCount(0);
+      message.success("已清理无法归类的记录");
+      emit(LISTEN_KEY.REFRESH_CLIPBOARD_LIST);
+      await fetchStats();
+    } catch (error) {
+      message.error(String(error));
+    } finally {
+      setUnmatchedCleaning(false);
+    }
+  };
 
   const handleTimeRangeChange = (value: TimeRangeKey) => {
     setTimeRange(value);
@@ -825,6 +850,57 @@ const StorageStats = ({ refreshKey }: StorageStatsProps) => {
           </Button>
         </Flex>
       </List.Item>
+
+      {unmatchedCount > 0 && (
+        <>
+          <Divider
+            style={{
+              borderColor: "var(--ant-color-border-secondary)",
+              margin: 0,
+            }}
+          />
+          <List.Item>
+            <Flex align="center" className="w-full" justify="space-between">
+              <Flex align="center" gap={12}>
+                <div
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full"
+                  style={{
+                    backgroundColor: "rgba(245,158,11,0.1)",
+                    border: "1px solid rgba(245,158,11,0.2)",
+                  }}
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="#f59e0b"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-bold text-sm">无法归类的记录</div>
+                  <div className="mt-0.5 text-color-3 text-xs">
+                    检测到 {unmatchedCount} 条记录无法匹配任何已知类型，建议清理
+                  </div>
+                </div>
+              </Flex>
+              <Button
+                danger
+                loading={unmatchedCleaning}
+                onClick={handleCleanUnmatched}
+              >
+                清理 ({unmatchedCount})
+              </Button>
+            </Flex>
+          </List.Item>
+        </>
+      )}
     </ProList>
   );
 };

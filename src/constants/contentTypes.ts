@@ -1,3 +1,6 @@
+import type { ExpressionBuilder } from "kysely";
+import type { DatabaseSchema } from "../types/database";
+
 /**
  * 12 类内容类型标签定义
  * 统一供 DateFilter、StorageStats 等组件使用
@@ -30,7 +33,7 @@ export const CONTENT_TYPE_TAGS: ContentTypeTag[] = [
  */
 export const getTypeDbCondition = (
   key: string,
-  eb: any,
+  eb: ExpressionBuilder<DatabaseSchema, "history">,
 ): ReturnType<typeof eb.and> | ReturnType<typeof eb> | null => {
   switch (key) {
     case "text":
