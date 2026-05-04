@@ -21,6 +21,11 @@
 		"release-rc": "release-it --preRelease=rc --preReleaseBase=1",
 		"release-beta": "release-it --preRelease=beta --preReleaseBase=1"
 	},
+	"pnpm": {
+		"overrides": {
+			"@codemirror/state": "6.6.0"
+		}
+	},
 	"dependencies": {
 		"@ant-design/happy-work-theme": "^1.0.1",
 		"@ant-design/icons": "^5.6.1",
